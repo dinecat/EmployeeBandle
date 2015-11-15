@@ -1,0 +1,23 @@
+{
+    "name": "dinecat/employee-bundle",
+    "type": "symfony-bundle",
+    "description": "Bundle provide employee management functionality for Symfony 2 apps.",
+    "keywords": ["user", "admin", "auth"],
+    "homepage": "https://github.com/dinecat/EmployeeBundle",
+    "license": "MIT",
+    "authors": [
+        {"name": "Dinecat", "homepage": "http://dinecat.com"},
+        {"name": "Mykola Zyk", "email": "relo.san.pub@gmail.com"}
+    ],
+    "require": {
+        "php": ">=5.6.0",
+        "symfony/framework-bundle": ">=2.6.0,<3.0",
+        "doctrine/orm": ">=2.5.0,<3.0",
+        "dinecat/data-structures": ">=1.0",
+        "dinecat/i18n-bundle": ">=1.1"
+    },
+    "autoload": {
+        "psr-0": {"Dinecat\\EmployeeBundle": ""}
+    },
+    "target-dir": "Dinecat/EmployeeBundle"
+}

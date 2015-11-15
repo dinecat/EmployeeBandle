@@ -133,7 +133,7 @@ class EmployeeData extends Dataset
      * @var \DateTime|null
      * @Assert\DateTime
      */
-    public $lastLoggedAt;
+    public $loggedAt;
 
     /**
      * Constructor.
