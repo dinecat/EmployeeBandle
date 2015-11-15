@@ -10,6 +10,7 @@
 namespace Dinecat\EmployeeBundle\Model\Data;
 
 use Dinecat\DataStructures\Collection\Collection;
+use Dinecat\DataStructures\Entity\NodeInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -18,7 +19,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @subpackage  Model.Data
  * @author      Mykola Zyk <relo.san.pub@gmail.com>
  */
-class EmployeeTranslationNode
+class EmployeeTranslationNode implements NodeInterface
 {
     /**
      * @var string

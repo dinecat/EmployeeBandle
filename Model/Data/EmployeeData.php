@@ -61,14 +61,14 @@ class EmployeeData extends Dataset
      * @Assert\NotBlank
      * @Assert\Type(type="bool")
      */
-    public $isEnabled;
+    public $enabled;
 
     /**
      * @var boolean
      * @Assert\NotBlank
      * @Assert\Type(type="bool")
      */
-    public $isLocked;
+    public $locked;
 
     /**
      * @var string

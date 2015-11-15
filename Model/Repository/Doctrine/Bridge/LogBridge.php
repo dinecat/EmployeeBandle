@@ -116,6 +116,8 @@ class LogBridge extends Bridge
      * @param   Data\LogData    $dataset
      * @param   EntityManager   $em
      * @return  static
+     * @throws  \Dinecat\DataStructures\Exception\IdentifiersNotMatch   If entity and dataset identifier's not matched.
+     * @throws  \Dinecat\DataStructures\Exception\IncompleteDataset     If imported dataset marked as partial/empty.
      */
     public function import(Data\LogData $dataset, EntityManager $em)
     {
@@ -159,7 +161,7 @@ class LogBridge extends Bridge
         $dataset->employeeId = $this->employee->getId();
         $dataset->params->replaceAll($this->params);
         $dataset->createdAt = $this->createdAt;
-        $dataset->setCompletion(true);
+        $dataset->setDatasetCompletion(true);
         return $dataset;
     }
 }

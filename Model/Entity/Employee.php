@@ -181,9 +181,9 @@ class Employee implements AdvancedUserInterface
      * Get date of employee last signin.
      * @return  \DateTime
      */
-    public function getLastLoggedAt()
+    public function getLoggedAt()
     {
-        return $this->data->lastLoggedAt;
+        return $this->data->loggedAt;
     }
 
     /**

@@ -39,7 +39,7 @@ class PositionData extends Dataset
      * @Assert\NotBlank
      * @Assert\Type(type="bool")
      */
-    public $isEnabled;
+    public $enabled;
 
     /**
      * @var Collection

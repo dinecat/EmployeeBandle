@@ -67,15 +67,15 @@ class EmployeeBridge extends Bridge
 
     /**
      * @var boolean
-     * @ORM\Column(name="is_enabled", type="boolean", nullable=false)
+     * @ORM\Column(name="enabled", type="boolean", nullable=false)
      */
-    protected $isEnabled = false;
+    protected $enabled = false;
 
     /**
      * @var boolean
-     * @ORM\Column(name="is_locked", type="boolean", nullable=false)
+     * @ORM\Column(name="locked", type="boolean", nullable=false)
      */
-    protected $isLocked = false;
+    protected $locked = false;
 
     /**
      * @var string
@@ -176,6 +176,8 @@ class EmployeeBridge extends Bridge
      * @param   Data\EmployeeData   $dataset
      * @param   EntityManager       $em
      * @return  static
+     * @throws  \Dinecat\DataStructures\Exception\IdentifiersNotMatch   If entity and dataset identifier's not matched.
+     * @throws  \Dinecat\DataStructures\Exception\IncompleteDataset     If imported dataset marked as partial/empty.
      */
     public function import(Data\EmployeeData $dataset, EntityManager $em)
     {
@@ -191,13 +193,28 @@ class EmployeeBridge extends Bridge
         $this->usernameCanonical = $dataset->usernameCanonical;
         $this->email = $dataset->email;
         $this->emailCanonical = $dataset->emailCanonical;
-        $this->isEnabled = $dataset->isEnabled;
-        $this->isLocked = $dataset->isLocked;
+        $this->enabled = $dataset->enabled;
+        $this->locked = $dataset->locked;
         $this->salt = $dataset->salt;
         $this->password = $dataset->password;
         $this->options = $dataset->options->toArray();
         $this->roles = $dataset->roles->toArray();
-        $this->importTranslations($this->translations, $dataset->translations);
+
+        array_map(
+            function ($lang) use ($dataset) {
+                if (!$this->translations->containsKey($lang)) {
+                    $this->translations->set(
+                        $lang,
+                        (new EmployeeTranslationBridge($this, $lang))->import($dataset->translations->get($lang))
+                    );
+                } elseif (!$dataset->translations->has($lang)) {
+                    $this->translations->remove($lang);
+                } else {
+                    $this->translations->get($lang)->import($dataset->translations->get($lang));
+                }
+            },
+            array_unique(array_merge($this->translations->getKeys(), $dataset->translations->getKeys()))
+        );
 
         $this->updatedAt = new \DateTime;
         return $this;
@@ -215,18 +232,26 @@ class EmployeeBridge extends Bridge
         $dataset->usernameCanonical = $this->usernameCanonical;
         $dataset->email = $this->email;
         $dataset->emailCanonical = $this->emailCanonical;
-        $dataset->isEnabled = $this->isEnabled;
-        $dataset->isLocked = $this->isLocked;
+        $dataset->enabled = $this->enabled;
+        $dataset->locked = $this->locked;
         $dataset->salt = $this->salt;
         $dataset->password = $this->password;
         $dataset->positionId = $this->position->getId();
         $dataset->options->replaceAll($this->options);
         $dataset->roles->replaceAll($this->roles);
-        $dataset->translations->replaceAll($this->exportTranslations($this->translations));
+
+        $dataset->translations->replaceAll(array_map(
+            function ($translation) {
+                /** @var EmployeeTranslationBridge $translation */
+                return $translation->export();
+            },
+            $this->translations->toArray()
+        ));
+
         $dataset->createdAt = $this->createdAt;
         $dataset->updatedAt = $this->updatedAt;
         $dataset->loggedAt = $this->loggedAt;
-        $dataset->setCompletion(true);
+        $dataset->setDatasetCompletion(true);
         return $dataset;
     }
 }

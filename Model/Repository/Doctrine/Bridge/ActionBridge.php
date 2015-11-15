@@ -58,9 +58,9 @@ class ActionBridge extends Bridge
 
     /**
      * @var boolean
-     * @ORM\Column(name="is_enabled", type="boolean", nullable=false)
+     * @ORM\Column(name="enabled", type="boolean", nullable=false)
      */
-    protected $isEnabled;
+    protected $enabled;
 
     /**
      * @var array
@@ -110,7 +110,7 @@ class ActionBridge extends Bridge
      */
     public function isEnabled()
     {
-        return $this->isEnabled;
+        return $this->enabled;
     }
 
     /**
@@ -127,6 +127,8 @@ class ActionBridge extends Bridge
      * @param   Data\ActionData $dataset
      * @param   EntityManager   $em
      * @return  static
+     * @throws  \Dinecat\DataStructures\Exception\IdentifiersNotMatch   If entity and dataset identifier's not matched.
+     * @throws  \Dinecat\DataStructures\Exception\IncompleteDataset     If imported dataset marked as partial/empty.
      */
     public function import(Data\ActionData $dataset, EntityManager $em)
     {
@@ -139,7 +141,7 @@ class ActionBridge extends Bridge
         );
 
         $this->name = $dataset->name;
-        $this->isEnabled = $dataset->isEnabled;
+        $this->enabled = $dataset->enabled;
         $this->rules = $dataset->rules->toArray();
 
         $this->translations = array_map(
@@ -168,7 +170,7 @@ class ActionBridge extends Bridge
         $dataset->id = $this->id;
         $dataset->entityId = $this->entity->getId();
         $dataset->name = $this->name;
-        $dataset->isEnabled = $this->isEnabled;
+        $dataset->enabled = $this->enabled;
         $dataset->rules->replaceAll($this->rules);
 
         foreach ($this->translations as $lang => $set) {
@@ -181,7 +183,7 @@ class ActionBridge extends Bridge
 
         $dataset->createdAt = $this->createdAt;
         $dataset->updatedAt = $this->updatedAt;
-        $dataset->setCompletion(true);
+        $dataset->setDatasetCompletion(true);
         return $dataset;
     }
 }

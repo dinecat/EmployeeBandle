@@ -90,6 +90,8 @@ class AuthLogBridge extends Bridge
      * @param   Data\AuthLogData    $dataset
      * @param   EntityManager       $em
      * @return  static
+     * @throws  \Dinecat\DataStructures\Exception\IdentifiersNotMatch   If entity and dataset identifier's not matched.
+     * @throws  \Dinecat\DataStructures\Exception\IncompleteDataset     If imported dataset marked as partial/empty.
      */
     public function import(Data\AuthLogData $dataset, EntityManager $em)
     {
@@ -119,7 +121,7 @@ class AuthLogBridge extends Bridge
         $dataset->ip = $this->ip;
         $dataset->params->replaceAll($this->params);
         $dataset->createdAt = $this->createdAt;
-        $dataset->setCompletion(true);
+        $dataset->setDatasetCompletion(true);
         return $dataset;
     }
 }
