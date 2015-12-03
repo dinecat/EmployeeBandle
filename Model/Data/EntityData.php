@@ -14,15 +14,14 @@ use Dinecat\DataStructures\Entity\Dataset;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * EntityData data object.
- * @package     DinecatEmployeeBundle
- * @subpackage  Model.Data
- * @author      Mykola Zyk <relo.san.pub@gmail.com>
+ * Data object for entity type.
+ * @package DinecatEmployeeBundle\Model\Data
+ * @author  Mykola Zyk <relo.san.pub@gmail.com>
  */
 class EntityData extends Dataset
 {
     /**
-     * @var integer
+     * @var int|null
      * @Assert\Type(type="integer")
      */
     public $id;
@@ -35,7 +34,7 @@ class EntityData extends Dataset
     public $name;
 
     /**
-     * @var boolean
+     * @var bool
      * @Assert\NotBlank
      * @Assert\Type(type="bool")
      */
@@ -58,13 +57,13 @@ class EntityData extends Dataset
     public $translations;
 
     /**
-     * @var \DateTime
+     * @var \DateTime|null
      * @Assert\DateTime
      */
     public $createdAt;
 
     /**
-     * @var \DateTime
+     * @var \DateTime|null
      * @Assert\DateTime
      */
     public $updatedAt;
@@ -74,7 +73,7 @@ class EntityData extends Dataset
      */
     public function __construct()
     {
-        $this->rules = new Collection;
-        $this->translations = new Collection;
+        $this->rules = new Collection();
+        $this->translations = new Collection();
     }
 }

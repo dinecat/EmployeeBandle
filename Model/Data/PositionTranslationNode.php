@@ -13,10 +13,9 @@ use Dinecat\DataStructures\Entity\NodeInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * PositionTranslation node of Position data object.
- * @package     DinecatEmployeeBundle
- * @subpackage  Model.Data
- * @author      Mykola Zyk <relo.san.pub@gmail.com>
+ * Translation node of Position data object.
+ * @package DinecatEmployeeBundle\Model\Data
+ * @author  Mykola Zyk <relo.san.pub@gmail.com>
  */
 class PositionTranslationNode implements NodeInterface
 {

@@ -14,15 +14,14 @@ use Dinecat\DataStructures\Entity\Dataset;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * EmployeeData data object.
- * @package     DinecatEmployeeBundle
- * @subpackage  Model.Data
- * @author      Mykola Zyk <relo.san.pub@gmail.com>
+ * Data object for employee.
+ * @package DinecatEmployeeBundle\Model\Data
+ * @author  Mykola Zyk <relo.san.pub@gmail.com>
  */
 class EmployeeData extends Dataset
 {
     /**
-     * @var integer
+     * @var int|null
      * @Assert\Type(type="integer")
      */
     public $id;
@@ -57,14 +56,14 @@ class EmployeeData extends Dataset
     public $emailCanonical;
 
     /**
-     * @var boolean
+     * @var bool
      * @Assert\NotBlank
      * @Assert\Type(type="bool")
      */
     public $enabled;
 
     /**
-     * @var boolean
+     * @var bool
      * @Assert\NotBlank
      * @Assert\Type(type="bool")
      */
@@ -85,7 +84,7 @@ class EmployeeData extends Dataset
     public $password;
 
     /**
-     * @var integer
+     * @var int
      * @Assert\NotBlank
      * @Assert\Type(type="integer")
      */
@@ -116,15 +115,13 @@ class EmployeeData extends Dataset
     public $translations;
 
     /**
-     * @var \DateTime
-     * @Assert\NotBlank
+     * @var \DateTime|null
      * @Assert\DateTime
      */
     public $createdAt;
 
     /**
-     * @var \DateTime
-     * @Assert\NotBlank
+     * @var \DateTime|null
      * @Assert\DateTime
      */
     public $updatedAt;
@@ -140,8 +137,8 @@ class EmployeeData extends Dataset
      */
     public function __construct()
     {
-        $this->options = new Collection;
-        $this->roles = new Collection;
-        $this->translations = new Collection;
+        $this->options = new Collection();
+        $this->roles = new Collection();
+        $this->translations = new Collection();
     }
 }

@@ -14,48 +14,48 @@ use Dinecat\DataStructures\Entity\Dataset;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * LogData data object.
- * @package     DinecatEmployeeBundle
- * @subpackage  Model.Data
- * @author      Mykola Zyk <relo.san.pub@gmail.com>
+ * Data object for log record of employee action.
+ * @package DinecatEmployeeBundle\Model\Data
+ * @author  Mykola Zyk <relo.san.pub@gmail.com>
  */
 class LogData extends Dataset
 {
     /**
-     * @var integer
+     * @var int|null
      * @Assert\Type(type="integer")
      */
     public $id;
 
     /**
-     * @var integer
+     * @var int
      * @Assert\NotBlank
      * @Assert\Type(type="integer")
      */
     public $objectId;
 
     /**
-     * @var integer
+     * @var int
      * @Assert\NotBlank
      * @Assert\Type(type="integer")
      */
     public $entityId;
 
     /**
-     * @var integer
+     * @var int
      * @Assert\NotBlank
      * @Assert\Type(type="integer")
      */
     public $actionId;
 
     /**
-     * @var integer
+     * @var int|null
      * @Assert\Type(type="integer")
      */
     public $versionId;
 
     /**
-     * @var integer
+     * @var int
+     * @Assert\NotBlank
      * @Assert\Type(type="integer")
      */
     public $employeeId;
@@ -68,7 +68,7 @@ class LogData extends Dataset
     public $params;
 
     /**
-     * @var \DateTime
+     * @var \DateTime|null
      * @Assert\DateTime
      */
     public $createdAt;
@@ -78,6 +78,6 @@ class LogData extends Dataset
      */
     public function __construct()
     {
-        $this->params = new Collection;
+        $this->params = new Collection();
     }
 }

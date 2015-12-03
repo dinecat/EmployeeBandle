@@ -14,21 +14,20 @@ use Dinecat\DataStructures\Entity\Dataset;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * AuthLogData data object.
- * @package     DinecatEmployeeBundle
- * @subpackage  Model.Data
- * @author      Mykola Zyk <relo.san.pub@gmail.com>
+ * Data object for auth log record.
+ * @package DinecatEmployeeBundle\Model\Data
+ * @author  Mykola Zyk <relo.san.pub@gmail.com>
  */
 class AuthLogData extends Dataset
 {
     /**
-     * @var integer
+     * @var int|null
      * @Assert\Type(type="integer")
      */
     public $id;
 
     /**
-     * @var integer
+     * @var int
      * @Assert\NotBlank
      * @Assert\Type(type="integer")
      */
@@ -49,7 +48,7 @@ class AuthLogData extends Dataset
     public $params;
 
     /**
-     * @var \DateTime
+     * @var \DateTime|null
      * @Assert\DateTime
      */
     public $createdAt;
@@ -59,6 +58,6 @@ class AuthLogData extends Dataset
      */
     public function __construct()
     {
-        $this->params = new Collection;
+        $this->params = new Collection();
     }
 }

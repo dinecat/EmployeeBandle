@@ -14,15 +14,15 @@ use Dinecat\DataStructures\Entity\NodeInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * EmployeeTranslation node of Employee data object.
- * @package     DinecatEmployeeBundle
- * @subpackage  Model.Data
- * @author      Mykola Zyk <relo.san.pub@gmail.com>
+ * Translation node of Employee data object.
+ * @package DinecatEmployeeBundle\Model\Data
+ * @author  Mykola Zyk <relo.san.pub@gmail.com>
  */
 class EmployeeTranslationNode implements NodeInterface
 {
     /**
      * @var string
+     * @Assert\NotBlank
      * @Assert\Language
      */
     public $lang;
@@ -72,7 +72,7 @@ class EmployeeTranslationNode implements NodeInterface
      */
     public function __construct($lang)
     {
-        $this->options = new Collection;
+        $this->options = new Collection();
         $this->lang = $lang;
     }
 }
