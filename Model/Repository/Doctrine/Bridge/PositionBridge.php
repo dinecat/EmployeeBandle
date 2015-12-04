@@ -9,15 +9,16 @@
 
 namespace Dinecat\EmployeeBundle\Model\Repository\Doctrine\Bridge;
 
-use Dinecat\DataStructures\Entity\Doctrine\Bridge;
-use Dinecat\EmployeeBundle\Model\Data;
+use Dinecat\DataStructures\Exception\IdentifiersNotMatchException;
+use Dinecat\DataStructures\Exception\IncompleteDatasetException;
+use Dinecat\EmployeeBundle\Model\Data\PositionData;
+use Dinecat\EmployeeBundle\Model\Data\PositionTranslationNode;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Position entity bridge.
- * @package     DinecatEmployeeBundle
- * @subpackage  Model.Repository.Doctrine.Bridge
- * @author      Mykola Zyk <relo.san.pub@gmail.com>
+ * Entity bridge for employee position.
+ * @package DinecatEmployeeBundle\Model\Repository\Doctrine
+ * @author  Mykola Zyk <relo.san.pub@gmail.com>
  *
  * @ORM\Entity
  * @ORM\Table(
@@ -27,10 +28,10 @@ use Doctrine\ORM\Mapping as ORM;
  *     }
  * )
  */
-class PositionBridge extends Bridge
+class PositionBridge
 {
     /**
-     * @var integer
+     * @var int|null
      * @ORM\Id
      * @ORM\Column(name="id", type="integer", nullable=false)
      * @ORM\GeneratedValue(strategy="AUTO")
@@ -45,7 +46,7 @@ class PositionBridge extends Bridge
     protected $name;
 
     /**
-     * @var boolean
+     * @var bool
      * @ORM\Column(name="enabled", type="boolean", nullable=false)
      */
     protected $enabled = false;
@@ -79,13 +80,13 @@ class PositionBridge extends Bridge
      */
     public function __construct()
     {
-        $this->createdAt = new \DateTime;
-        $this->updatedAt = new \DateTime;
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
     }
 
     /**
      * Get identifier of the position.
-     * @return  integer
+     * @return  int|null
      */
     public function getId()
     {
@@ -93,8 +94,8 @@ class PositionBridge extends Bridge
     }
 
     /**
-     * Chack if position enabled.
-     * @return  boolean TRUE if position enabled, FALSE otherwise.
+     * Check if position enabled.
+     * @return  bool    TRUE if position enabled, FALSE otherwise.
      */
     public function isEnabled()
     {
@@ -112,15 +113,20 @@ class PositionBridge extends Bridge
 
     /**
      * Import data from dataset.
-     * @param   Data\PositionData   $dataset
+     * @param   PositionData    $dataset
      * @return  static
-     * @throws  \Dinecat\DataStructures\Exception\IdentifiersNotMatch   If entity and dataset identifier's not matched.
-     * @throws  \Dinecat\DataStructures\Exception\IncompleteDataset     If imported dataset marked as partial/empty.
+     * @throws  IdentifiersNotMatchException    If entity and dataset identifier's not matched.
+     * @throws  IncompleteDatasetException      If imported dataset marked as partial/empty.
      */
-    public function import(Data\PositionData $dataset)
+    public function import(PositionData $dataset)
     {
-        $this->matchIds($this->id, $dataset->id);
-        $this->validateDataset($dataset);
+        if ($this->id && $this->id !== $dataset->id) {
+            throw new IdentifiersNotMatchException(get_class($this), $this->id, $dataset->id);
+        }
+
+        if (!$dataset->isDatasetComplete()) {
+            throw new IncompleteDatasetException(get_class($this), $this->id);
+        }
 
         $this->name = $dataset->name;
         $this->enabled = $dataset->enabled;
@@ -128,7 +134,7 @@ class PositionBridge extends Bridge
 
         $this->translations = array_map(
             function ($item) {
-                /** @var Data\PositionTranslationNode $item */
+                /** @var PositionTranslationNode $item */
                 return [
                     'title' => $item->title,
                     'slug' => $item->slug,
@@ -139,24 +145,24 @@ class PositionBridge extends Bridge
             $dataset->translations->toArray()
         );
 
-        $this->updatedAt = new \DateTime;
+        $this->updatedAt = new \DateTime();
         return $this;
     }
 
     /**
      * Export data to dataset.
-     * @return  Data\PositionData
+     * @return  PositionData
      */
     public function export()
     {
-        $dataset = new Data\PositionData;
+        $dataset = new PositionData;
         $dataset->id = $this->id;
         $dataset->name = $this->name;
         $dataset->enabled = $this->enabled;
         $dataset->options->replaceAll($this->options);
 
         foreach ($this->translations as $lang => $set) {
-            $node = new Data\PositionTranslationNode($lang);
+            $node = new PositionTranslationNode($lang);
             $node->title = $set['title'];
             $node->slug = $set['slug'];
             $node->short = $set['short'];
@@ -164,8 +170,8 @@ class PositionBridge extends Bridge
             $dataset->translations->set($lang, $node);
         }
 
-        $dataset->createdAt = $this->createdAt;
-        $dataset->updatedAt = $this->updatedAt;
+        $dataset->createdAt = clone $this->createdAt;
+        $dataset->updatedAt = clone $this->updatedAt;
         $dataset->setDatasetCompletion(true);
         return $dataset;
     }

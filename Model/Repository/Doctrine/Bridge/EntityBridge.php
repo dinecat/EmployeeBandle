@@ -9,15 +9,16 @@
 
 namespace Dinecat\EmployeeBundle\Model\Repository\Doctrine\Bridge;
 
-use Dinecat\DataStructures\Entity\Doctrine\Bridge;
-use Dinecat\EmployeeBundle\Model\Data;
+use Dinecat\DataStructures\Exception\IdentifiersNotMatchException;
+use Dinecat\DataStructures\Exception\IncompleteDatasetException;
+use Dinecat\EmployeeBundle\Model\Data\EntityData;
+use Dinecat\EmployeeBundle\Model\Data\EntityTranslationNode;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Entity entity bridge.
- * @package     DinecatEmployeeBundle
- * @subpackage  Model.Repository.Doctrine.Bridge
- * @author      Mykola Zyk <relo.san.pub@gmail.com>
+ * Entity bridge for entity type.
+ * @package DinecatEmployeeBundle\Model\Repository\Doctrine
+ * @author  Mykola Zyk <relo.san.pub@gmail.com>
  *
  * @ORM\Entity
  * @ORM\Table(
@@ -27,10 +28,10 @@ use Doctrine\ORM\Mapping as ORM;
  *     }
  * )
  */
-class EntityBridge extends Bridge
+class EntityBridge
 {
     /**
-     * @var integer
+     * @var int|null
      * @ORM\Id
      * @ORM\Column(name="id", type="integer", nullable=false)
      * @ORM\GeneratedValue(strategy="AUTO")
@@ -45,7 +46,7 @@ class EntityBridge extends Bridge
     protected $name;
 
     /**
-     * @var boolean
+     * @var bool
      * @ORM\Column(name="enabled", type="boolean", nullable=false)
      */
     protected $enabled;
@@ -79,13 +80,13 @@ class EntityBridge extends Bridge
      */
     public function __construct()
     {
-        $this->createdAt = new \DateTime;
-        $this->updatedAt = new \DateTime;
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
     }
 
     /**
      * Get identifier of the entity.
-     * @return  integer
+     * @return  int|null
      */
     public function getId()
     {
@@ -93,8 +94,8 @@ class EntityBridge extends Bridge
     }
 
     /**
-     * Chack if entity enabled.
-     * @return  boolean TRUE if Entity enabled, FALSE otherwise.
+     * Check if entity enabled.
+     * @return  bool    TRUE if Entity enabled, FALSE otherwise.
      */
     public function isEnabled()
     {
@@ -112,15 +113,20 @@ class EntityBridge extends Bridge
 
     /**
      * Import data from dataset.
-     * @param   Data\EntityData $dataset
+     * @param   EntityData  $dataset
      * @return  static
-     * @throws  \Dinecat\DataStructures\Exception\IdentifiersNotMatch   If entity and dataset identifier's not matched.
-     * @throws  \Dinecat\DataStructures\Exception\IncompleteDataset     If imported dataset marked as partial/empty.
+     * @throws  IdentifiersNotMatchException    If entity and dataset identifier's not matched.
+     * @throws  IncompleteDatasetException      If imported dataset marked as partial/empty.
      */
-    public function import(Data\EntityData $dataset)
+    public function import(EntityData $dataset)
     {
-        $this->matchIds($this->id, $dataset->id);
-        $this->validateDataset($dataset);
+        if ($this->id && $this->id !== $dataset->id) {
+            throw new IdentifiersNotMatchException(get_class($this), $this->id, $dataset->id);
+        }
+
+        if (!$dataset->isDatasetComplete()) {
+            throw new IncompleteDatasetException(get_class($this), $this->id);
+        }
 
         $this->name = $dataset->name;
         $this->enabled = $dataset->enabled;
@@ -128,7 +134,7 @@ class EntityBridge extends Bridge
 
         $this->translations = array_map(
             function ($item) {
-                /** @var Data\EntityTranslationNode $item */
+                /** @var EntityTranslationNode $item */
                 return [
                     'title' => $item->title,
                     'slug' => $item->slug,
@@ -138,32 +144,32 @@ class EntityBridge extends Bridge
             $dataset->translations->toArray()
         );
 
-        $this->updatedAt = new \DateTime;
+        $this->updatedAt = new \DateTime();
         return $this;
     }
 
     /**
      * Export data to dataset.
-     * @return  Data\EntityData
+     * @return  EntityData
      */
     public function export()
     {
-        $dataset = new Data\EntityData;
+        $dataset = new EntityData;
         $dataset->id = $this->id;
         $dataset->name = $this->name;
         $dataset->enabled = $this->enabled;
         $dataset->rules->replaceAll($this->rules);
 
         foreach ($this->translations as $lang => $set) {
-            $node = new Data\EntityTranslationNode($lang);
+            $node = new EntityTranslationNode($lang);
             $node->title = $set['title'];
             $node->slug = $set['slug'];
             $node->description = $set['description'];
             $dataset->translations->set($lang, $node);
         }
 
-        $dataset->createdAt = $this->createdAt;
-        $dataset->updatedAt = $this->updatedAt;
+        $dataset->createdAt = clone $this->createdAt;
+        $dataset->updatedAt = clone $this->updatedAt;
         $dataset->setDatasetCompletion(true);
         return $dataset;
     }

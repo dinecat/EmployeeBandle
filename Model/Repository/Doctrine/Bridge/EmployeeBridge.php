@@ -9,17 +9,17 @@
 
 namespace Dinecat\EmployeeBundle\Model\Repository\Doctrine\Bridge;
 
-use Dinecat\DataStructures\Entity\Doctrine\Bridge;
-use Dinecat\EmployeeBundle\Model\Data;
+use Dinecat\DataStructures\Exception\IdentifiersNotMatchException;
+use Dinecat\DataStructures\Exception\IncompleteDatasetException;
+use Dinecat\EmployeeBundle\Model\Data\EmployeeData;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Employee entity bridge.
- * @package     DinecatEmployeeBundle
- * @subpackage  Model.Repository.Doctrine.Bridge
- * @author      Mykola Zyk <relo.san.pub@gmail.com>
+ * Entity bridge for employee.
+ * @package DinecatEmployeeBundle\Model\Repository\Doctrine
+ * @author  Mykola Zyk <relo.san.pub@gmail.com>
  *
  * @ORM\Entity
  * @ORM\Table(
@@ -30,10 +30,10 @@ use Doctrine\ORM\Mapping as ORM;
  *     }
  * )
  */
-class EmployeeBridge extends Bridge
+class EmployeeBridge
 {
     /**
-     * @var integer
+     * @var int|null
      * @ORM\Id
      * @ORM\Column(name="id", type="integer", nullable=false)
      * @ORM\GeneratedValue(strategy="AUTO")
@@ -66,13 +66,13 @@ class EmployeeBridge extends Bridge
     protected $emailCanonical;
 
     /**
-     * @var boolean
+     * @var bool
      * @ORM\Column(name="enabled", type="boolean", nullable=false)
      */
     protected $enabled = false;
 
     /**
-     * @var boolean
+     * @var bool
      * @ORM\Column(name="locked", type="boolean", nullable=false)
      */
     protected $locked = false;
@@ -147,14 +147,14 @@ class EmployeeBridge extends Bridge
      */
     public function __construct()
     {
-        $this->translations = new ArrayCollection;
-        $this->createdAt = new \DateTime;
-        $this->updatedAt = new \DateTime;
+        $this->translations = new ArrayCollection();
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
     }
 
     /**
      * Get identifier of the employee.
-     * @return  integer
+     * @return  int|null
      */
     public function getId()
     {
@@ -167,22 +167,27 @@ class EmployeeBridge extends Bridge
      */
     public function updateLoggedAt()
     {
-        $this->loggedAt = new \DateTime;
+        $this->loggedAt = new \DateTime();
         return $this;
     }
 
     /**
      * Import data from dataset.
-     * @param   Data\EmployeeData   $dataset
-     * @param   EntityManager       $em
+     * @param   EmployeeData    $dataset
+     * @param   EntityManager   $em
      * @return  static
-     * @throws  \Dinecat\DataStructures\Exception\IdentifiersNotMatch   If entity and dataset identifier's not matched.
-     * @throws  \Dinecat\DataStructures\Exception\IncompleteDataset     If imported dataset marked as partial/empty.
+     * @throws  IdentifiersNotMatchException    If entity and dataset identifier's not matched.
+     * @throws  IncompleteDatasetException      If imported dataset marked as partial/empty.
      */
-    public function import(Data\EmployeeData $dataset, EntityManager $em)
+    public function import(EmployeeData $dataset, EntityManager $em)
     {
-        $this->matchIds($this->id, $dataset->id);
-        $this->validateDataset($dataset);
+        if ($this->id && $this->id !== $dataset->id) {
+            throw new IdentifiersNotMatchException(get_class($this), $this->id, $dataset->id);
+        }
+
+        if (!$dataset->isDatasetComplete()) {
+            throw new IncompleteDatasetException(get_class($this), $this->id);
+        }
 
         $this->position = $em->getReference(
             'Dinecat\EmployeeBundle\Model\Repository\Doctrine\Bridge\PositionBridge',
@@ -216,17 +221,17 @@ class EmployeeBridge extends Bridge
             array_unique(array_merge($this->translations->getKeys(), $dataset->translations->getKeys()))
         );
 
-        $this->updatedAt = new \DateTime;
+        $this->updatedAt = new \DateTime();
         return $this;
     }
 
     /**
      * Export data to dataset.
-     * @return  Data\EmployeeData
+     * @return  EmployeeData
      */
     public function export()
     {
-        $dataset = new Data\EmployeeData;
+        $dataset = new EmployeeData;
         $dataset->id = $this->id;
         $dataset->username = $this->username;
         $dataset->usernameCanonical = $this->usernameCanonical;
@@ -248,9 +253,9 @@ class EmployeeBridge extends Bridge
             $this->translations->toArray()
         ));
 
-        $dataset->createdAt = $this->createdAt;
-        $dataset->updatedAt = $this->updatedAt;
-        $dataset->loggedAt = $this->loggedAt;
+        $dataset->createdAt = clone $this->createdAt;
+        $dataset->updatedAt = clone $this->updatedAt;
+        $dataset->loggedAt = clone $this->loggedAt;
         $dataset->setDatasetCompletion(true);
         return $dataset;
     }

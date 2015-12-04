@@ -9,16 +9,17 @@
 
 namespace Dinecat\EmployeeBundle\Model\Repository\Doctrine\Bridge;
 
-use Dinecat\DataStructures\Entity\Doctrine\Bridge;
-use Dinecat\EmployeeBundle\Model\Data;
+use Dinecat\DataStructures\Exception\IdentifiersNotMatchException;
+use Dinecat\DataStructures\Exception\IncompleteDatasetException;
+use Dinecat\EmployeeBundle\Model\Data\ActionData;
+use Dinecat\EmployeeBundle\Model\Data\ActionTranslationNode;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Action entity bridge.
- * @package     DinecatEmployeeBundle
- * @subpackage  Model.Repository.Doctrine.Bridge
- * @author      Mykola Zyk <relo.san.pub@gmail.com>
+ * Entity bridge for action type on entity object.
+ * @package DinecatEmployeeBundle\Model\Repository\Doctrine
+ * @author  Mykola Zyk <relo.san.pub@gmail.com>
  *
  * @ORM\Entity
  * @ORM\Table(
@@ -28,10 +29,10 @@ use Doctrine\ORM\Mapping as ORM;
  *     }
  * )
  */
-class ActionBridge extends Bridge
+class ActionBridge
 {
     /**
-     * @var integer
+     * @var int|null
      * @ORM\Id
      * @ORM\Column(name="id", type="integer", nullable=false)
      * @ORM\GeneratedValue(strategy="AUTO")
@@ -57,7 +58,7 @@ class ActionBridge extends Bridge
     protected $name;
 
     /**
-     * @var boolean
+     * @var bool
      * @ORM\Column(name="enabled", type="boolean", nullable=false)
      */
     protected $enabled;
@@ -91,13 +92,13 @@ class ActionBridge extends Bridge
      */
     public function __construct()
     {
-        $this->createdAt = new \DateTime;
-        $this->updatedAt = new \DateTime;
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
     }
 
     /**
      * Get identifier of the action.
-     * @return integer
+     * @return int|null
      */
     public function getId()
     {
@@ -105,8 +106,8 @@ class ActionBridge extends Bridge
     }
 
     /**
-     * Chack if action enabled.
-     * @return  boolean TRUE if action enabled, FALSE otherwise.
+     * Check if action enabled.
+     * @return  bool    TRUE if action enabled, FALSE otherwise.
      */
     public function isEnabled()
     {
@@ -124,16 +125,21 @@ class ActionBridge extends Bridge
 
     /**
      * Import data from dataset.
-     * @param   Data\ActionData $dataset
+     * @param   ActionData      $dataset
      * @param   EntityManager   $em
      * @return  static
-     * @throws  \Dinecat\DataStructures\Exception\IdentifiersNotMatch   If entity and dataset identifier's not matched.
-     * @throws  \Dinecat\DataStructures\Exception\IncompleteDataset     If imported dataset marked as partial/empty.
+     * @throws  IdentifiersNotMatchException    If entity and dataset identifier's not matched.
+     * @throws  IncompleteDatasetException      If imported dataset marked as partial/empty.
      */
-    public function import(Data\ActionData $dataset, EntityManager $em)
+    public function import(ActionData $dataset, EntityManager $em)
     {
-        $this->matchIds($this->id, $dataset->id);
-        $this->validateDataset($dataset);
+        if ($this->id && $this->id !== $dataset->id) {
+            throw new IdentifiersNotMatchException(get_class($this), $this->id, $dataset->id);
+        }
+
+        if (!$dataset->isDatasetComplete()) {
+            throw new IncompleteDatasetException(get_class($this), $this->id);
+        }
 
         $this->entity = $em->getReference(
             'Dinecat\EmployeeBundle\Model\Repository\Doctrine\Bridge\EntityBridge',
@@ -146,7 +152,7 @@ class ActionBridge extends Bridge
 
         $this->translations = array_map(
             function ($item) {
-                /** @var Data\ActionTranslationNode $item */
+                /** @var ActionTranslationNode $item */
                 return [
                     'title' => $item->title,
                     'slug' => $item->slug,
@@ -156,17 +162,17 @@ class ActionBridge extends Bridge
             $dataset->translations->toArray()
         );
 
-        $this->updatedAt = new \DateTime;
+        $this->updatedAt = new \DateTime();
         return $this;
     }
 
     /**
      * Export data to dataset.
-     * @return  Data\ActionData
+     * @return  ActionData
      */
     public function export()
     {
-        $dataset = new Data\ActionData;
+        $dataset = new ActionData;
         $dataset->id = $this->id;
         $dataset->entityId = $this->entity->getId();
         $dataset->name = $this->name;
@@ -174,15 +180,15 @@ class ActionBridge extends Bridge
         $dataset->rules->replaceAll($this->rules);
 
         foreach ($this->translations as $lang => $set) {
-            $node = new Data\ActionTranslationNode($lang);
+            $node = new ActionTranslationNode($lang);
             $node->title = $set['title'];
             $node->slug = $set['slug'];
             $node->description = $set['description'];
             $dataset->translations->set($lang, $node);
         }
 
-        $dataset->createdAt = $this->createdAt;
-        $dataset->updatedAt = $this->updatedAt;
+        $dataset->createdAt = clone $this->createdAt;
+        $dataset->updatedAt = clone $this->updatedAt;
         $dataset->setDatasetCompletion(true);
         return $dataset;
     }

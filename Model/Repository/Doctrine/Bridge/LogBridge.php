@@ -9,16 +9,16 @@
 
 namespace Dinecat\EmployeeBundle\Model\Repository\Doctrine\Bridge;
 
-use Dinecat\DataStructures\Entity\Doctrine\Bridge;
-use Dinecat\EmployeeBundle\Model\Data;
+use Dinecat\DataStructures\Exception\IdentifiersNotMatchException;
+use Dinecat\DataStructures\Exception\IncompleteDatasetException;
+use Dinecat\EmployeeBundle\Model\Data\LogData;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Log entity bridge.
- * @package     DinecatEmployeeBundle
- * @subpackage  Model.Repository.Doctrine.Bridge
- * @author      Mykola Zyk <relo.san.pub@gmail.com>
+ * Entity bridge for log record.
+ * @package DinecatEmployeeBundle\Model\Repository\Doctrine
+ * @author  Mykola Zyk <relo.san.pub@gmail.com>
  *
  * @ORM\Entity
  * @ORM\Table(
@@ -26,10 +26,10 @@ use Doctrine\ORM\Mapping as ORM;
  *     indexes={@ORM\Index(name="din_employee_log_object_idx", columns={"object_id", "entity_id"})}
  * )
  */
-class LogBridge extends Bridge
+class LogBridge
 {
     /**
-     * @var integer
+     * @var int|null
      * @ORM\Id
      * @ORM\Column(name="id", type="bigint", nullable=false)
      * @ORM\GeneratedValue(strategy="AUTO")
@@ -38,7 +38,7 @@ class LogBridge extends Bridge
     protected $id;
 
     /**
-     * @var integer
+     * @var int
      * @ORM\Column(name="object_id", type="bigint", nullable=false)
      */
     protected $objectId;
@@ -66,7 +66,7 @@ class LogBridge extends Bridge
     protected $action;
 
     /**
-     * @var integer
+     * @var int|null
      * @ORM\Column(name="version_id", type="bigint", nullable=true)
      */
     protected $versionId;
@@ -89,7 +89,7 @@ class LogBridge extends Bridge
     protected $createdAt;
 
     /**
-     * @var string
+     * @var array
      * @ORM\Column(name="params", type="json_extra", nullable=true)
      */
     protected $params = [];
@@ -99,12 +99,12 @@ class LogBridge extends Bridge
      */
     public function __construct()
     {
-        $this->createdAt = new \DateTime;
+        $this->createdAt = new \DateTime();
     }
 
     /**
      * Get identifier of the log record.
-     * @return  integer
+     * @return  int|null
      */
     public function getId()
     {
@@ -113,16 +113,21 @@ class LogBridge extends Bridge
 
     /**
      * Import data from dataset.
-     * @param   Data\LogData    $dataset
+     * @param   LogData         $dataset
      * @param   EntityManager   $em
      * @return  static
-     * @throws  \Dinecat\DataStructures\Exception\IdentifiersNotMatch   If entity and dataset identifier's not matched.
-     * @throws  \Dinecat\DataStructures\Exception\IncompleteDataset     If imported dataset marked as partial/empty.
+     * @throws  IdentifiersNotMatchException    If entity and dataset identifier's not matched.
+     * @throws  IncompleteDatasetException      If imported dataset marked as partial/empty.
      */
-    public function import(Data\LogData $dataset, EntityManager $em)
+    public function import(LogData $dataset, EntityManager $em)
     {
-        $this->matchIds($this->id, $dataset->id);
-        $this->validateDataset($dataset);
+        if ($this->id && $this->id !== $dataset->id) {
+            throw new IdentifiersNotMatchException(get_class($this), $this->id, $dataset->id);
+        }
+
+        if (!$dataset->isDatasetComplete()) {
+            throw new IncompleteDatasetException(get_class($this), $this->id);
+        }
 
         $this->entity = $em->getReference(
             'Dinecat\EmployeeBundle\Model\Repository\Doctrine\Bridge\EntityBridge',
@@ -148,11 +153,11 @@ class LogBridge extends Bridge
 
     /**
      * Export data to dataset.
-     * @return  Data\LogData
+     * @return  LogData
      */
     public function export()
     {
-        $dataset = new Data\LogData;
+        $dataset = new LogData;
         $dataset->id = $this->id;
         $dataset->objectId = $this->objectId;
         $dataset->entityId = $this->entity->getId();
@@ -160,7 +165,7 @@ class LogBridge extends Bridge
         $dataset->versionId = $this->versionId;
         $dataset->employeeId = $this->employee->getId();
         $dataset->params->replaceAll($this->params);
-        $dataset->createdAt = $this->createdAt;
+        $dataset->createdAt = clone $this->createdAt;
         $dataset->setDatasetCompletion(true);
         return $dataset;
     }

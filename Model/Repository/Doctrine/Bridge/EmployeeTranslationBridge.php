@@ -9,14 +9,13 @@
 
 namespace Dinecat\EmployeeBundle\Model\Repository\Doctrine\Bridge;
 
-use Dinecat\EmployeeBundle\Model\Data;
+use Dinecat\EmployeeBundle\Model\Data\EmployeeTranslationNode;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * EmployeeTranslation entity bridge.
- * @package     DinecatEmployeeBundle
- * @subpackage  Model.Repository.Doctrine.Bridge
- * @author      Mykola Zyk <relo.san.pub@gmail.com>
+ * Entity bridge for employee translation.
+ * @package DinecatEmployeeBundle\Model\Repository\Doctrine
+ * @author  Mykola Zyk <relo.san.pub@gmail.com>
  *
  * @ORM\Entity
  * @ORM\Table(name="din_employee_t9n")
@@ -56,13 +55,13 @@ class EmployeeTranslationBridge
     protected $lastname;
 
     /**
-     * @var string
+     * @var string|null
      * @ORM\Column(name="brief", type="text", length=1000, nullable=true)
      */
     protected $brief;
 
     /**
-     * @var string
+     * @var string|null
      * @ORM\Column(name="description", type="text", nullable=true)
      */
     protected $description;
@@ -95,10 +94,10 @@ class EmployeeTranslationBridge
 
     /**
      * Import data from dataset node.
-     * @param   Data\EmployeeTranslationNode    $node
+     * @param   EmployeeTranslationNode $node
      * @return  static
      */
-    public function import(Data\EmployeeTranslationNode $node)
+    public function import(EmployeeTranslationNode $node)
     {
         $this->firstname = $node->firstname;
         $this->lastname = $node->lastname;
@@ -110,11 +109,11 @@ class EmployeeTranslationBridge
 
     /**
      * Export data to dataset node.
-     * @return  Data\EmployeeTranslationNode
+     * @return  EmployeeTranslationNode
      */
     public function export()
     {
-        $node = new Data\EmployeeTranslationNode($this->lang);
+        $node = new EmployeeTranslationNode($this->lang);
         $node->firstname = $this->firstname;
         $node->lastname = $this->lastname;
         $node->brief = $this->brief;
